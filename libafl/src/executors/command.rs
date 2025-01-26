@@ -816,7 +816,13 @@ pub trait CommandConfigurator<I, C = Child>: Sized {
             // for reference: https://www.man7.org/linux/man-pages/man7/signal.7.html
             Some(9) => ExitKind::Oom,
             Some(_) => ExitKind::Crash,
-            None => ExitKind::Ok,
+            None => {
+                if status.success() {
+                    ExitKind::Ok
+                } else {
+                    ExitKind::Fail
+                }
+            }
         }
     }
 
