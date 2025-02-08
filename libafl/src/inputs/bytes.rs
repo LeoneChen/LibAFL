@@ -6,6 +6,7 @@ use core::{
     cell::RefCell,
     hash::{BuildHasher, Hasher},
 };
+use std::os::raw::c_char;
 #[cfg(feature = "std")]
 use std::{fs::File, io::Read, path::Path};
 
@@ -19,6 +20,13 @@ use crate::{
     corpus::CorpusId,
     inputs::{HasMutatorBytes, HasTargetBytes, Input},
 };
+
+extern "C" {
+    fn data_provider_init(data: *const u8, size: usize);
+    fn sqlsmith_init();
+    fn sqlsmith_load_and_prepare(conninfo: *const c_char) -> usize;
+    fn sqlsmith_get_generated(buf: *mut c_char, len: usize) -> bool;
+}
 
 /// A bytes input is the basic input
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq, Hash)]
@@ -102,6 +110,26 @@ impl HasMutatorBytes for BytesInput {
 impl HasTargetBytes for BytesInput {
     #[inline]
     fn target_bytes(&self) -> OwnedSlice<u8> {
+        if let Ok(value) = std::env::var("BYTE_TO_SQL") {
+            if value == "1" {
+                unsafe {
+                    data_provider_init(self.bytes.as_ptr(), self.bytes.len());
+                    sqlsmith_init();
+                    let conninfo = std::ffi::CString::new("db/Chinook_Sqlite.sqlite").unwrap();
+                    let sql_len = sqlsmith_load_and_prepare(conninfo.as_ptr());
+                    if sql_len == 0 {
+                        panic!("sqlsmith not initialized");
+                    }
+                    let mut buffer: Vec<u8> = vec![0; sql_len];
+                    let success =
+                        sqlsmith_get_generated(buffer.as_mut_ptr() as *mut c_char, sql_len);
+                    if !success {
+                        panic!("sqlsmith not initialized or buffer too small");
+                    }
+                    return OwnedSlice::from(buffer);
+                }
+            }
+        }
         OwnedSlice::from(&self.bytes)
     }
 }

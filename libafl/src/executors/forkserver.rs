@@ -782,6 +782,8 @@ where
                 if let Some(asan_observer) = self.observers.get_mut(&self.asan_obs) {
                     asan_observer.parse_asan_output_from_asan_log_file(pid)?;
                 }
+            } else if libc::WEXITSTATUS(self.forkserver().status()) != 0 {
+                exit_kind = ExitKind::Fail;
             }
         } else {
             self.forkserver.set_last_run_timed_out(true);
