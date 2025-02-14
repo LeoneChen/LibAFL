@@ -117,7 +117,7 @@ where
             .iterations(state)?
             .saturating_sub(self.execs_since_progress_start(state)?);
         */
-        let num = self.iterations(state)?;
+        let mut num = self.iterations(state)?;
         let mut testcase = state.current_testcase_mut()?;
 
         let Ok(input) = I::try_transform_from(&mut testcase, state) else {
@@ -126,6 +126,12 @@ where
         drop(testcase);
         mark_feature_time!(state, PerfFeature::GetInputFromCorpus);
 
+        if let Ok(fuzz_count) = self
+            .mutator_mut()
+            .afl_custom_fuzz_count(state, &mut input.clone())
+        {
+            num = fuzz_count;
+        }
         for _ in 0..num {
             let mut input = input.clone();
 

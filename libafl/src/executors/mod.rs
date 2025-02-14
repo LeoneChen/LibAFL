@@ -63,6 +63,8 @@ pub enum ExitKind {
         /// The exitkind of the secondary executor
         secondary: DiffExitKind,
     },
+    /// The run failed for an unknown reason
+    Fail,
     // The run resulted in a custom `ExitKind`.
     // Custom(Box<dyn SerdeAny>),
 }
@@ -84,6 +86,8 @@ pub enum DiffExitKind {
     Timeout,
     /// One of the executors itelf repots a differential, we can't go into further details.
     Diff,
+    /// The run failed for an unknown reason
+    Fail,
     // The run resulted in a custom `ExitKind`.
     // Custom(Box<dyn SerdeAny>),
 }
@@ -98,6 +102,7 @@ impl From<ExitKind> for DiffExitKind {
             ExitKind::Oom => DiffExitKind::Oom,
             ExitKind::Timeout => DiffExitKind::Timeout,
             ExitKind::Diff { .. } => DiffExitKind::Diff,
+            ExitKind::Fail => DiffExitKind::Fail,
         }
     }
 }

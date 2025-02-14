@@ -551,6 +551,8 @@ where
                     .append_metadata(state, manager, observers, &mut testcase)?;
                 let id = state.corpus_mut().add(testcase)?;
                 self.scheduler_mut().on_add(state, id)?;
+                self.scheduler_mut()
+                    .afl_custom_queue_new_entry(state, input)?;
 
                 Ok(Some(id))
             }

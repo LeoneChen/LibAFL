@@ -344,9 +344,9 @@ where
             .unwrap_or_else(|| {
                 // if this fails, there is not much we can do. let's hope it failed because the process finished
                 // in the meantime.
-                drop(child.kill());
+                child.kill().unwrap();
                 // finally, try to wait to properly clean up system resources.
-                drop(child.wait());
+                child.wait().unwrap();
                 ExitKind::Timeout
             });
 
@@ -816,7 +816,13 @@ pub trait CommandConfigurator<I, C = Child>: Sized {
             // for reference: https://www.man7.org/linux/man-pages/man7/signal.7.html
             Some(9) => ExitKind::Oom,
             Some(_) => ExitKind::Crash,
-            None => ExitKind::Ok,
+            None => {
+                if status.success() {
+                    ExitKind::Ok
+                } else {
+                    ExitKind::Fail
+                }
+            }
         }
     }
 

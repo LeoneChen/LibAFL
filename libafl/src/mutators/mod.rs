@@ -4,6 +4,7 @@
 //! You can read more about mutators in the [libAFL book](https://aflplus.plus/libafl-book/core_concepts/mutator.html)
 pub mod scheduled;
 use core::fmt;
+use std::string::ToString;
 
 pub use scheduled::*;
 pub mod mutations;
@@ -41,7 +42,7 @@ pub mod nautilus;
 
 use alloc::{borrow::Cow, boxed::Box, vec::Vec};
 
-use libafl_bolts::{tuples::IntoVec, HasLen, Named};
+use libafl_bolts::{tuples::IntoVec, ErrorBacktrace, HasLen, Named};
 #[cfg(feature = "nautilus")]
 pub use nautilus::*;
 use tuple_list::NonEmptyTuple;
@@ -104,6 +105,14 @@ pub trait Mutator<I, S>: Named {
     #[inline]
     fn post_exec(&mut self, _state: &mut S, _new_corpus_id: Option<CorpusId>) -> Result<(), Error> {
         Ok(())
+    }
+
+    /// afl_custom_fuzz_count
+    fn afl_custom_fuzz_count(&mut self, _state: &mut S, _input: &mut I) -> Result<usize, Error> {
+        Err(Error::NotImplemented(
+            "Not used, it's ok".to_string(),
+            ErrorBacktrace::new(),
+        ))
     }
 }
 
