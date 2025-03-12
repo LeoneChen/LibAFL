@@ -203,6 +203,11 @@ pub trait Scheduler<I, S> {
         next_id: Option<CorpusId>,
     ) -> Result<(), Error>;
 
+    /// afl_custom_queue_new_entry
+    fn afl_custom_queue_new_entry(&mut self, _state: &mut S, _input: &I) -> Result<(), Error> {
+        Ok(())
+    }
+
     //    *state.corpus_mut().current_mut() = next_id;
     //    Ok(())
 }
